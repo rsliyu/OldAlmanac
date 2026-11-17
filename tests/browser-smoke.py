@@ -106,6 +106,7 @@ with sync_playwright() as p:
     assert mobile.evaluate('document.documentElement.scrollWidth <= innerWidth')
     mobile.screenshot(path=str(RESULTS / 'mobile-play.png'))
     mobile.locator('#play-panel .dock-content').evaluate('(el) => el.scrollTop = el.scrollHeight')
+    expect(mobile.locator('#btn-play-close')).to_be_in_viewport()
     mobile.screenshot(path=str(RESULTS / 'mobile-collection.png'))
     mobile.locator('#play-panel .dock-content').evaluate('(el) => el.scrollTop = 0')
 
