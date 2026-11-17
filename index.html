@@ -11,6 +11,7 @@
   <script src="./snapdom.js" onerror="window.__snapdomFailed = true"></script>
   <script src="./lite-datepicker.js"></script>
   <script src="./calendar-art.js?v=3.1"></script>
+  <script src="./daily-play.js"></script>
   <style>
     /* 主题变量 */
     @font-face {
@@ -31,7 +32,7 @@
 
     @font-face {
       font-family: "FZXingKai-S04S";
-      src: url("./FZXingKai-S04S.subset.woff2") format("woff2");
+      src: url("./FZXingKai-S04S.woff2") format("woff2");
       font-weight: normal;
       font-style: normal;
       font-display: swap;
@@ -39,7 +40,7 @@
 
     @font-face {
       font-family: "remixicon";
-      src: url("./remixicon-subset.woff2") format("woff2");
+      src: url("./remixicon.woff2") format("woff2");
       font-display: swap;
     }
 
@@ -1544,6 +1545,7 @@
 
 
   <style id="print-alias"></style>
+  <link rel="stylesheet" href="./daily-play.css" />
 </head>
 
 <body>
@@ -1589,6 +1591,15 @@
           </button>
         </div>
         <div class="tab-slot">
+          <button type="button" class="tab-btn" id="btn-play" aria-haspopup="dialog" aria-expanded="false"
+            aria-controls="play-panel" aria-label="今日小馆：抽签与小挑战" title="今日小馆（G 键）">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
+              <path d="m7 9-1-6m5 6V2m4 7 2-6M5 9h14l-1 11H6L5 9Z" />
+              <path d="M10 13h4v4h-4z" />
+            </svg>
+          </button>
+        </div>
+        <div class="tab-slot">
           <button type="button" class="tab-btn" id="btn-export" aria-haspopup="dialog" aria-expanded="false"
             aria-controls="export-panel" aria-label="导出日历" title="导出日历（E 键）">
             <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6"
@@ -1600,6 +1611,11 @@
       </div>
     </div>
 
+    <button type="button" class="play-entry" id="btn-play-entry" aria-haspopup="dialog" aria-expanded="false" aria-controls="play-panel">
+      <span class="play-entry__seal" aria-hidden="true">签</span>
+      <strong>今日小馆</strong><small>抽一签 · 做小事 · 集好章</small>
+      <span aria-hidden="true">↗</span>
+    </button>
     <p id="announcement" class="sr-only" role="status" aria-live="polite"></p>
     <noscript>请启用 JavaScript，以体验日历翻页与撕纸。</noscript>
   </main>
@@ -1619,6 +1635,54 @@
         <button type="button" id="btn-today" title="回到今天（R 键）">回到今天</button>
         <button type="button" class="primary" id="btn-date-go">前往日期</button>
       </div>
+    </div>
+  </section>
+
+  <section class="dock-panel play-panel" id="play-panel" role="dialog" aria-labelledby="play-panel-title" hidden inert>
+    <div class="dock-content">
+      <header class="dock-header">
+        <h2 id="play-panel-title">今日小馆</h2>
+        <button type="button" class="dock-close" id="btn-play-close" aria-label="关闭今日小馆">×</button>
+      </header>
+      <div class="play-date" id="play-date"></div>
+      <p class="play-intro" id="play-theme-hint">给今天一点灵感。每日一签，给生活一点新意。</p>
+      <div class="play-themes" role="group" aria-label="选择签文心情">
+        <button type="button" data-play-theme="free" aria-pressed="true">随心</button>
+        <button type="button" data-play-theme="focus" aria-pressed="false">专注</button>
+        <button type="button" data-play-theme="rest" aria-pressed="false">松弛</button>
+        <button type="button" data-play-theme="connect" aria-pressed="false">相聚</button>
+      </div>
+      <div class="play-draw-stage" id="play-draw-stage" aria-busy="false">
+        <div class="play-unopened" id="play-unopened">
+          <div class="play-cylinder" aria-hidden="true"><i></i><i></i><i></i></div>
+          <p>心里留一个念头，轻摇签筒</p>
+        </div>
+        <article class="play-sign" id="play-sign" hidden aria-labelledby="play-sign-title">
+          <span class="play-sign__number" id="play-sign-number"></span>
+          <h3 id="play-sign-title"></h3>
+          <div class="play-poem"><p id="play-poem-first"></p><p id="play-poem-second"></p></div>
+          <p class="play-sign__note" id="play-sign-note"></p>
+        </article>
+      </div>
+      <div class="play-actions">
+        <button type="button" class="play-action play-action--primary" id="btn-play-draw">摇一摇 · 抽今日签</button>
+        <button type="button" class="play-action" id="btn-play-copy" hidden>复制签文</button>
+      </div>
+      <textarea class="play-share-text" id="play-share-text" aria-label="可复制分享的签文" readonly hidden></textarea>
+      <section class="play-challenge" aria-labelledby="play-challenge-title">
+        <div class="play-section-label"><span id="play-challenge-label">今日小挑战</span><span id="play-challenge-duration"></span></div>
+        <h3 id="play-challenge-title"></h3>
+        <p id="play-challenge-description"></p>
+        <span class="play-completed" id="play-completed" hidden>已完成</span>
+        <button type="button" class="play-action" id="btn-play-stamp">做到了 · 盖一枚章</button>
+        <button type="button" class="play-action" id="btn-play-today" hidden>回到今天</button>
+      </section>
+      <section class="play-collection" aria-label="最近七天的集章册">
+        <div class="play-section-label"><span>小欢喜集章册</span><span class="play-stats" id="play-stats"></span></div>
+        <div class="play-week" id="play-week"></div>
+      </section>
+      <p class="play-footer" id="play-storage-note"></p>
+      <p class="play-status" id="play-status" role="status" aria-live="polite"></p>
     </div>
   </section>
 
@@ -3082,6 +3146,10 @@
         if (datePicker) datePicker.value = date;
         if (dateWidget) dateWidget.setDate(date, { silent: true });
         applyChromeTheme(!!(d && d.isWeekend));
+        if (book.dataset.date !== date) {
+          book.dataset.date = date;
+          window.dispatchEvent(new CustomEvent("almanac:datechange", { detail: { date } }));
+        }
       }
 
       let warmupGeneration = 0;
@@ -4378,7 +4446,7 @@
         flipToIndex(target);
       }
       function goToday() {
-        flipToIndex(TODAY_INDEX);
+        goToDate(todayCN());
         book.focus({ preventScroll: true });
       }
 
@@ -4416,6 +4484,10 @@
       const printRoot = $("print-root");
       const exportPanel = $("export-panel");
       const btnDate = $("btn-date");
+      const btnPlay = $("btn-play");
+      const btnPlayEntry = $("btn-play-entry");
+      const playPanel = $("play-panel");
+      let playTrigger = btnPlay;
       const datePanel = $("date-panel");
       const exportOverlay = $("export-overlay");
       const exportOverlayTitle = $("export-overlay-title");
@@ -4741,12 +4813,16 @@
       function positionDock(panel, button) {
         const rect = button.getBoundingClientRect();
         const vw = document.documentElement.clientWidth;
-        const vh = window.innerHeight;
+        const vh = document.documentElement.clientHeight;
         let edge = Math.min(vw - 12, rect.left - 10);
         let top = Math.max(12, Math.min(rect.top, vh - 100));
         if (edge - 12 < 230) {
           edge = vw - 12;
           top = Math.max(12, Math.min(rect.bottom + 10, vh - 100));
+        }
+        if (panel === playPanel && vw <= 540) {
+          edge = vw - 12;
+          top = 12;
         }
         panel.style.setProperty("--dock-right", `${vw - edge}px`);
         panel.style.setProperty("--dock-top", `${top}px`);
@@ -4764,7 +4840,7 @@
         button.setAttribute("aria-expanded", "true");
         dockTimers.set(panel, setTimeout(() => {
           if (panel.classList.contains("is-open")) {
-            const target = panel.querySelector('.ldp-trigger, [data-range][aria-pressed="true"]');
+            const target = panel.querySelector('.ldp-trigger, [data-range][aria-pressed="true"], [data-play-theme][aria-pressed="true"]');
             if (target && !panel.contains(document.activeElement)) target.focus({ preventScroll: true });
           }
         }, motionPreference.matches ? 0 : 620));
@@ -4781,6 +4857,7 @@
       }
       function openDatePanel() {
         if (exportBusy) return;
+        closePlayPanel(false, true);
         closeExportPanel(false, true);
         datePicker.value = anchorDate();
         dateWidget.setDate(datePicker.value, { silent: true });
@@ -4796,6 +4873,7 @@
       }
 
       function openExportPanel() {
+        closePlayPanel(false, true);
         closeDatePanel(false, true);
         const base = anchorDate();
         exportStart.value = exportStart.value || base;
@@ -4813,9 +4891,39 @@
         if (!exportPanel.classList.contains("is-open")) openExportPanel();
         else closeExportPanel();
       }
+      function openPlayPanel(trigger = btnPlay) {
+        if (exportBusy) return;
+        closeDatePanel(false, true);
+        closeExportPanel(false, true);
+        playTrigger = trigger;
+        showDock(playPanel, btnPlay);
+        btnPlayEntry.setAttribute("aria-expanded", "true");
+        window.dispatchEvent(new Event("almanac:playopen"));
+      }
+      function closePlayPanel(refocus, immediate) {
+        if (!playPanel.classList.contains("is-open")) return;
+        hideDock(playPanel, btnPlay, false, immediate);
+        btnPlayEntry.setAttribute("aria-expanded", "false");
+        if (refocus) playTrigger.focus({ preventScroll: true });
+        window.dispatchEvent(new Event("almanac:playclose"));
+      }
+      function togglePlayPanel(trigger) {
+        if (playPanel.classList.contains("is-open")) closePlayPanel(true);
+        else openPlayPanel(trigger);
+      }
+      [btnPlay, btnPlayEntry].forEach((button) => button.addEventListener("click", (event) => {
+        event.stopPropagation();
+        togglePlayPanel(button);
+      }));
+      $("btn-play-close").addEventListener("click", () => closePlayPanel(true));
+      $("btn-play-today").addEventListener("click", () => {
+        closePlayPanel(false, true);
+        goToday();
+      });
       window.addEventListener("resize", () => {
         if (datePanel.classList.contains("is-open")) positionDock(datePanel, btnDate);
         if (exportPanel.classList.contains("is-open")) positionDock(exportPanel, btnExport);
+        if (playPanel.classList.contains("is-open")) positionDock(playPanel, btnPlay);
         // 等菜单定位更新后再校准日期浮层位置。
         requestAnimationFrame(() => [dateWidget, exportStartWidget, exportEndWidget].forEach(widget => widget.reposition()));
       });
@@ -4997,13 +5105,15 @@
       });
 
       document.addEventListener("click", (event) => {
-        if (event.target.closest("#book-tabs, .dock-panel")) return;
+        if (event.target.closest("#book-tabs, .dock-panel, .play-entry")) return;
+        closePlayPanel();
         closeDatePanel();
         if (!exportBusy) closeExportPanel();
       });
       document.addEventListener("keydown", (event) => {
         if (event.defaultPrevented) return;
         if (event.key === "Escape") {
+          closePlayPanel(true);
           closeDatePanel(true);
           if (!exportBusy) closeExportPanel(true);
           return;
@@ -5014,6 +5124,9 @@
         if (event.key.toLowerCase() === "e") {
           event.preventDefault();
           toggleExportPanel();
+        } else if (event.key.toLowerCase() === "g") {
+          event.preventDefault();
+          togglePlayPanel(btnPlay);
         }
       });
 
@@ -5059,5 +5172,6 @@
       });
     })();
   </script>
+  <script src="./daily-play-ui.js"></script>
 </body>
 </html>
